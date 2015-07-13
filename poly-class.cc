@@ -2,29 +2,13 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <sstream>
+#include <iomanip>
+#include <stdlib.h>
+#include "poly-class.h"
 
 using namespace std;
 
-
-class Polynomial
-{
-    vector<double> data;
-    int degree;
-
-    public:
-        Polynomial(vector<double> v);
-        int coeff_at(int power);
-        int eval_at(int x);
-        int degree_of();
-        vector<double> lo_to_hi();
-        vector<double> hi_to_lo();
-        string to_string();
-        Polynomial operator+(const Polynomial& b);
-        Polynomial operator-(const Polynomial& b);
-        Polynomial operator*(const Polynomial& b);
-        bool operator==(const Polynomial& b);
-        Polynomial differentiate();
-};
 
 Polynomial::Polynomial(vector<double> v)
 {
@@ -58,7 +42,7 @@ vector<double> Polynomial::lo_to_hi()
     vector<double> result(a.size());
     reverse_copy(a.begin(), a.end(), result.begin());
     return result;
-}
+;}
 
 vector<double> Polynomial::hi_to_lo()
 {
@@ -68,24 +52,33 @@ vector<double> Polynomial::hi_to_lo()
 
 Polynomial Polynomial::operator+(const Polynomial& b)
 {
-    Polynomial* a = this;
-    vector<double> result;
-    for (int i = 0; i <= a->degree; ++i) {
-        result[i] = a->data[i];
-    }
-    for (int j = 0; j <= b.degree; ++j) {
-        result[j] = b.data[j];
-    }
+    int aLen = this->data.size();
+    int bLen = b.data.size();
+
+    Polynomial v = (aLen > bLen) ? *this : b;
+    Polynomial w = (aLen > bLen) ? b : *this;
+    vector<double> result(max(aLen, bLen));
+
+    int diff = abs(aLen - bLen);
+
+    for (int i = 0; i < aLen; ++i) { result[i] += v.data[i]; }
+    for (int j = 0; j < bLen; ++j) { result[j + diff] += w.data[j]; }
     return Polynomial(result);
 }
 
 Polynomial Polynomial::operator-(const Polynomial& b)
 {
-    Polynomial* a = this;
-    vector<double> result(max(a->data.size(),b.data.size()));
-    for (int i = 0; i <= a->degree; ++i) { result[i] += a->data[i]; }
-    for (int j = 0; j <= b.degree; ++j) { result[j] -= b.data[j]; }
-    while (result[0] == 0 && result.size() > 1) {result.erase(result.begin()); }
+    int aLen = this->data.size();
+    int bLen = b.data.size();
+
+    Polynomial v = (aLen > bLen) ? *this : b;
+    Polynomial w = (aLen > bLen) ? b : *this;
+    vector<double> result(max(aLen, bLen));
+
+    int diff = abs(aLen - bLen);
+
+    for (int i = 0; i < aLen; ++i) { result[i] += v.data[i]; }
+    for (int j = 0; j < bLen; ++j) { result[j + diff] -= w.data[j]; }
     return Polynomial(result);
 }
 
@@ -114,33 +107,50 @@ bool Polynomial::operator==(const Polynomial& b)
 Polynomial Polynomial::differentiate()
 {
     Polynomial* a = this;
+
     int len = a->data.size();
-    vector<double> result(len);
-    for (int i = 0; i < len; ++i) {
-        result[i] = (i + 1) * a->data[i + 1];
+    vector<double> result(len - 1);
+    for (int i = 0; i < len - 1; ++i) {
+        result[i] = a->data[i] * (len - i - 1);
     }
     return Polynomial(result);
 }
 
-
-// const string T[3][3] = {
-//     {"", "", ""}
-//     {"%d", "%"}
-
-// }
-
-// string Polynomial::to_string()
-// {
-//     string result = "";
-//     int len = this->data.size();
-//     for (int i = 0; i < len; ++i) {
-
-//     }
-// }
-
-
-int main()
+Polynomial Polynomial::integrate()
 {
-    //Test suite
-    return 0;
-;}
+    Polynomial* a = this;
+
+    int len = a->data.size();
+    vector<double> result(len + 1);
+    for (int i = 0; i < len; ++i) {
+        result[i] = a->data[i] / (len - i);
+    }
+    return Polynomial(result);
+}
+
+string dble_to_str(double n)
+{
+        int p = 4;
+        stringstream o;
+        o << setprecision(p) << n;
+        return o.str();
+}
+
+string Polynomial::to_string()
+{
+    string result = "";
+    vector<double> a = this->data;
+    int len = this->data.size();
+    for (int i = 0; i < len; ++i) {
+        if (a[i] == 0)  { continue; }
+
+        if (i != 0)     { result += " + "; }
+
+        if (a[i] < 0)   { result += "-"; }
+        if (a[i] != 1 || i == len - 1) {result += dble_to_str(abs(a[i])); }
+        if (i == len - 2) {result += "x";
+        } else if (i < len - 2) {result += "x^" + dble_to_str(len - i - 1); }
+
+    }
+    return result;
+}

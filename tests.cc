@@ -38,5 +38,7 @@ int main()
     cout << U.to_string() << "\n";
     cout << U.differentiate().to_string() << "\n";
 
+    cout << P.coeff_at(1) << "\n";
+
     return 0;
 }

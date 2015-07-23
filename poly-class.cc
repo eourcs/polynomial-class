@@ -5,8 +5,6 @@
 #include <sstream>
 #include <iomanip>
 #include <stdlib.h>
-#include <iostream>
-#include <fstream>
 #include "poly-class.h"
 
 using namespace std;

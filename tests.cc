@@ -10,16 +10,18 @@ int main()
     vector<double> v = {1, 0, 2};
     vector<double> w = {2, 3};
     vector<double> x = {1};
+    vector<double> y = {1, 0, -612};
     Polynomial P = Polynomial(v);
     Polynomial Q = Polynomial(w);
     Polynomial T = Polynomial(v);
     Polynomial U = Polynomial(x);
+    Polynomial M = Polynomial(y);
 
     cout << P.to_string() << "\n";
     cout << (P + Q).to_string() << "\n";
     cout << (P * Q).to_string() << "\n";
 
-    vector<double> r = P.differentiate().hi_to_lo();
+    vector<double> r = P.differentiate().lo_to_hi();
     for (int i = 0; i < int(r.size()); ++i) {
         cout << r[i] << " ";
     }
@@ -39,6 +41,9 @@ int main()
     cout << U.differentiate().to_string() << "\n";
 
     cout << P.coeff_at(1) << "\n";
+
+    cout << M.root_newton(10) << "\n";
+    cout << M.root_laguerre(10) << "\n";
 
     return 0;
 }

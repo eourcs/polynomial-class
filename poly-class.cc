@@ -5,6 +5,8 @@
 #include <sstream>
 #include <iomanip>
 #include <stdlib.h>
+#include <iostream>
+#include <fstream>
 #include "poly-class.h"
 
 using namespace std;
@@ -59,7 +61,7 @@ Polynomial Polynomial::operator+(const Polynomial& b)
     Polynomial w = (aLen > bLen) ? b : *this;
     vector<double> result(max(aLen, bLen));
 
-    int diff = abs(aLen - bLen);
+    int diff = fabs(aLen - bLen);
 
     for (int i = 0; i < aLen; ++i) { result[i] += v.data[i]; }
     for (int j = 0; j < bLen; ++j) { result[j + diff] += w.data[j]; }
@@ -75,7 +77,7 @@ Polynomial Polynomial::operator-(const Polynomial& b)
     Polynomial w = (aLen > bLen) ? b : *this;
     vector<double> result(max(aLen, bLen));
 
-    int diff = abs(aLen - bLen);
+    int diff = fabs(aLen - bLen);
 
     for (int i = 0; i < aLen; ++i) { result[i] += v.data[i]; }
     for (int j = 0; j < bLen; ++j) { result[j + diff] -= w.data[j]; }
@@ -93,6 +95,32 @@ Polynomial Polynomial::operator*(const Polynomial& b)
     }
     return Polynomial(result);
 }
+
+Polynomial Polynomial::mult_scalar(double b)
+{
+    vector<double> a = this->data;
+    int n = a.size();
+    vector<double> result(n);
+
+    for (int i = 0; i <= n; ++i) {
+        result[i] = a[i] * b;
+    }
+    return Polynomial(result);
+}
+
+// pair <Polynomial, Polynomial> Polynomial::operator\(const Polynomial& b)
+// {
+//     if (b.degree_of == 0) { return nullptr; }
+//     Polynomial* a = this;
+//     vector<double> v = {0};
+//     pair <Polynomial, Polynomial> result = <Polynomial(v), a>;
+//     Polynomial* q = &result.first;
+//     Polynomial* r = &result.second;
+//     while (r != 0 && r.degree_of() >= b.degree_of()) {
+
+
+//     }
+// }
 
 bool Polynomial::operator==(const Polynomial& b)
 {
@@ -142,15 +170,74 @@ string Polynomial::to_string()
     vector<double> a = this->data;
     int len = this->data.size();
     for (int i = 0; i < len; ++i) {
-        if (a[i] == 0)  { continue; }
+        if (a[i] == 0) { continue; }
 
-        if (i != 0)     { result += " + "; }
+        if (i != 0) { result += " + "; }
 
-        if (a[i] < 0)   { result += "-"; }
-        if (a[i] != 1 || i == len - 1) {result += dble_to_str(abs(a[i])); }
+        if (a[i] < 0) { result += "-"; }
+        if (a[i] != 1 || i == len - 1) {result += dble_to_str(fabs(a[i])); }
         if (i == len - 2) {result += "x";
         } else if (i < len - 2) {result += "x^" + dble_to_str(len - i - 1); }
 
     }
     return result;
 }
+
+double Polynomial::root_newton(double guess, double tolerance,
+                               double epsilon, int maxIter)
+{
+    double x0 = guess;
+    double x1 = guess;
+    Polynomial* a = this;
+    Polynomial aPrime = a->differentiate();
+
+    for (int i = 0; i < maxIter; ++i) {
+        double y = a->eval_at(x0);
+        double yPrime = aPrime.eval_at(x0);
+
+        if (fabs(yPrime) < epsilon) { break; }
+
+        x1 = x0 - y / yPrime;
+
+        if ((fabs(x1 - x0) / fabs(x1)) < tolerance) { return x1; }
+
+        x0 = x1;
+    }
+    return x1;
+}
+
+double Polynomial::root_laguerre(double guess, double tolerance,
+                                 double epsilon, int maxIter)
+{
+    double x = guess;
+    Polynomial* a = this;
+
+    double n = a->degree_of();
+    Polynomial aPrime = a->differentiate();
+    Polynomial aPP = aPrime.differentiate();
+
+    for (int i = 0; i < maxIter; ++i) {
+        double y = a->eval_at(x);
+        if (fabs(y) < epsilon) { break; }
+
+        double yPrime = aPrime.eval_at(x);
+        double yPP = aPP.eval_at(x);
+
+        double G = yPrime / y;
+        double H = pow(G, 2.0) - yPP / y;
+
+        double R = sqrt((n - 1) * (n * H - pow(G, 2.0)));
+        double d1 = G + R;
+        double d2 = G - R;
+        double d = fabs(d1) > fabs(d2) ? d1 : d2;
+
+        double a = n / d;
+        if (fabs(a) < tolerance) { return x; }
+
+        x = x - a;
+    }
+    return x;
+}
+
+
+

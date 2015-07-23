@@ -19,6 +19,13 @@ class Polynomial {
         Polynomial operator-(const Polynomial& b);
         Polynomial operator*(const Polynomial& b);
         bool operator==(const Polynomial& b);
+        Polynomial mult_scalar(double b);
         Polynomial differentiate();
         Polynomial integrate();
+        double root_newton(double guess, double tolerance = .00000001,
+                           double epsilon = .000000000000001,
+                           int maxIter = 20);
+        double root_laguerre(double guess, double tolerance = .00000001,
+                             double epsilon = .000000000000001,
+                             int maxIter = 20);
 };
